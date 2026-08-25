@@ -1,342 +1,514 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Aplikasi Penilaian Lomba Online</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplikasi Penilaian Lomba</title>
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Firebase SDK Legacy v8 -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <!-- jsPDF & autoTable CDN untuk Ekspor PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 </head>
+
 <body class="bg-slate-100 text-slate-800 font-sans min-h-screen">
 
-  <header class="bg-indigo-700 text-white p-4 shadow-md flex justify-between items-center">
-    <div>
-      <h1 class="text-xl font-bold" id="appHeaderTitle">Aplikasi Penilaian Lomba</h1>
-      <p class="text-xs text-indigo-200" id="dbStatus">Status: Menghubungkan ke Database...</p>
+  <!-- HEADER / NAVBAR -->
+  <header class="bg-indigo-700 text-white shadow-md p-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold cursor-pointer" onclick="showView('homeView')">🏆 Sistem Penilaian Lomba</h1>
+    <div id="userBadge" class="hidden flex items-center gap-3">
+      <span id="roleTag" class="bg-indigo-900 px-3 py-1 rounded-full text-xs font-semibold uppercase"></span>
+      <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm font-semibold transition">Keluar</button>
     </div>
-    <button id="btnLogout" onclick="logout()" class="hidden bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1 rounded transition">
-      Keluar
-    </button>
   </header>
 
-  <main class="container mx-auto p-4 max-w-6xl">
+  <main class="max-w-6xl mx-auto p-4 md:p-6">
 
-    <!-- LOGIN SECTION -->
-    <section id="sectionLogin" class="space-y-6">
-      <div class="text-center my-6">
-        <h2 class="text-2xl font-bold text-slate-700" id="loginHeaderTitle">Selamat Datang</h2>
-        <p class="text-slate-500">Masuk menggunakan password Admin atau Juri</p>
+    <!-- BERANDA UTAMA (PILIHAN MASUK) -->
+    <section id="homeView" class="space-y-6">
+      <div class="text-center py-6">
+        <h2 class="text-3xl font-extrabold text-slate-900">Selamat Datang di Portal Penilaian</h2>
+        <p class="text-slate-600 mt-2">Silakan pilih peran Anda untuk melanjutkan</p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-        <div class="bg-white p-6 rounded-xl shadow-md border">
-          <h3 class="text-lg font-bold text-indigo-700 mb-4 border-b pb-2">Login Admin</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+        <!-- Kartu Akses Admin -->
+        <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+          <h3 class="text-xl font-bold text-indigo-700 mb-4">Akses Admin</h3>
           <form onsubmit="loginAdmin(event)" class="space-y-4">
-            <input type="password" id="inputPassAdmin" class="w-full border rounded p-2 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Password Admin" required />
-            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded font-medium">Masuk Admin</button>
+            <div>
+              <label class="block text-sm font-medium mb-1">Kata Sandi Admin</label>
+              <input type="password" id="adminPassword" required class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Masukkan kata sandi">
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg transition">Masuk Admin</button>
           </form>
         </div>
 
-        <div class="bg-white p-6 rounded-xl shadow-md border">
-          <h3 class="text-lg font-bold text-emerald-700 mb-4 border-b pb-2">Login Juri</h3>
+        <!-- Kartu Akses Juri -->
+        <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+          <h3 class="text-xl font-bold text-emerald-600 mb-4">Akses Juri</h3>
           <form onsubmit="loginJuri(event)" class="space-y-4">
-            <input type="password" id="inputPassJuri" class="w-full border rounded p-2 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Password Juri" required />
-            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded font-medium">Masuk Juri</button>
+            <div>
+              <label class="block text-sm font-medium mb-1">Pilih Akun Juri</label>
+              <select id="juriSelect" required class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none">
+                <option value="">-- Pilih Juri --</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Kata Sandi Juri</label>
+              <input type="password" id="juriPassword" required class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Masukkan kata sandi">
+            </div>
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-lg transition">Masuk Juri</button>
           </form>
         </div>
       </div>
     </section>
 
-    <!-- ADMIN SECTION -->
-    <section id="sectionAdmin" class="hidden space-y-8">
-      <div class="bg-indigo-50 border-l-4 border-indigo-600 p-4 rounded flex justify-between items-center flex-wrap gap-2">
-        <div>
-          <h2 class="text-xl font-bold text-indigo-900">Panel Kontrol Admin</h2>
-          <p class="text-sm text-indigo-700">Data tersimpan otomatis secara realtime ke seluruh perangkat.</p>
-        </div>
-        <button onclick="resetAllData()" class="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-2 rounded shadow font-semibold">
-          Reset Seluruh Data
-        </button>
-      </div>
-
-      <div class="bg-white p-5 rounded-xl shadow-sm border space-y-3">
-        <h3 class="font-bold text-slate-700 border-b pb-2">Nama Lomba</h3>
-        <form onsubmit="setNamaLomba(event)" class="flex gap-3">
-          <input type="text" id="inputNamaLomba" placeholder="Nama Lomba..." class="w-full border p-2 rounded text-sm" required />
-          <button type="submit" class="bg-indigo-600 text-white text-sm px-4 py-2 rounded">Simpan</button>
-        </form>
+    <!-- DASHBOARD ADMIN -->
+    <section id="adminView" class="hidden space-y-8">
+      <div class="flex justify-between items-center border-b pb-4">
+        <h2 class="text-2xl font-bold text-slate-900">Panel Kontrol Administrator</h2>
+        <button onclick="resetAllData()" class="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition shadow">⚠️ Hapus Seluruh Data</button>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Input Juri -->
-        <div class="bg-white p-5 rounded-xl shadow-sm border space-y-4">
-          <h3 class="font-bold text-slate-700 border-b pb-2">1. Kelola Juri</h3>
+        <!-- Tambah Juri -->
+        <div class="bg-white p-5 rounded-xl shadow border">
+          <h3 class="font-bold text-lg text-indigo-700 mb-3">1. Kelola Juri</h3>
           <form onsubmit="addJuri(event)" class="space-y-3">
-            <input type="text" id="juriName" placeholder="Nama Juri" class="w-full border p-2 rounded text-sm" required />
-            <input type="password" id="juriPass" placeholder="Password Juri" class="w-full border p-2 rounded text-sm" required />
-            <button type="submit" class="w-full bg-indigo-600 text-white text-sm py-2 rounded">Tambah Juri</button>
+            <input type="text" id="newJuriName" placeholder="Nama (cth: Juri 1)" required class="w-full border p-2 rounded">
+            <input type="password" id="newJuriPass" placeholder="Kata Sandi Juri" required class="w-full border p-2 rounded">
+            <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded font-medium hover:bg-indigo-700">Tambah Juri</button>
           </form>
-          <ul id="listJuri" class="text-sm divide-y"></ul>
+          <ul id="juriList" class="mt-4 space-y-1 text-sm border-t pt-2"></ul>
         </div>
 
-        <!-- Input Peserta -->
-        <div class="bg-white p-5 rounded-xl shadow-sm border space-y-4">
-          <h3 class="font-bold text-slate-700 border-b pb-2">2. Kelola Peserta</h3>
-          <form onsubmit="addPeserta(event)" class="space-y-3">
-            <input type="text" id="pesertaNo" placeholder="No. Peserta" class="w-full border p-2 rounded text-sm" required />
-            <input type="text" id="pesertaNama" placeholder="Nama Peserta" class="w-full border p-2 rounded text-sm" required />
-            <select id="pesertaKategori" class="w-full border p-2 rounded text-sm" required>
-              <option value="">-- Kategori --</option>
-              <option value="SD/MI">SD/MI</option>
-              <option value="Umum Formal">Umum Formal</option>
-              <option value="Umum Hiburan">Umum Hiburan</option>
-            </select>
-            <button type="submit" class="w-full bg-indigo-600 text-white text-sm py-2 rounded">Tambah Peserta</button>
-          </form>
-          <div id="listPesertaCount" class="text-xs text-slate-500"></div>
-        </div>
-
-        <!-- Input Kriteria -->
-        <div class="bg-white p-5 rounded-xl shadow-sm border space-y-4">
-          <h3 class="font-bold text-slate-700 border-b pb-2">3. Kriteria Penilaian</h3>
+        <!-- Tambah Kriteria -->
+        <div class="bg-white p-5 rounded-xl shadow border">
+          <h3 class="font-bold text-lg text-indigo-700 mb-3">2. Kelola Kriteria Penilaian</h3>
           <form onsubmit="addKriteria(event)" class="space-y-3">
-            <input type="text" id="kriteriaNama" placeholder="Nama Kriteria" class="w-full border p-2 rounded text-sm" required />
-            <button type="submit" class="w-full bg-indigo-600 text-white text-sm py-2 rounded">Tambah Kriteria</button>
+            <input type="text" id="newKriteria" placeholder="Nama Kriteria (cth: Keharmonisan)" required class="w-full border p-2 rounded">
+            <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded font-medium hover:bg-indigo-700">Tambah Kriteria</button>
           </form>
-          <ul id="listKriteria" class="text-sm divide-y"></ul>
+          <ul id="kriteriaList" class="mt-4 space-y-1 text-sm border-t pt-2"></ul>
+        </div>
+
+        <!-- Tambah Peserta -->
+        <div class="bg-white p-5 rounded-xl shadow border">
+          <h3 class="font-bold text-lg text-indigo-700 mb-3">3. Tambah Peserta</h3>
+          <form onsubmit="addPeserta(event)" class="space-y-3">
+            <input type="text" id="nomorPeserta" placeholder="Nomor Peserta (Bebas)" required class="w-full border p-2 rounded">
+            <input type="text" id="namaPeserta" placeholder="Nama Peserta" required class="w-full border p-2 rounded">
+            <select id="kategoriPeserta" required class="w-full border p-2 rounded">
+              <option value="SD/MI">Kategori SD/MI</option>
+              <option value="Umum Formal">Kategori Umum Formal</option>
+              <option value="Umum Hiburan">Kategori Umum Hiburan</option>
+            </select>
+            <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded font-medium hover:bg-indigo-700">Tambah Peserta</button>
+          </form>
         </div>
       </div>
 
-      <!-- Rekap Nilai -->
-      <div class="bg-white p-6 rounded-xl shadow-sm border space-y-6">
-        <div class="flex justify-between items-center border-b pb-4">
-          <h3 class="text-lg font-bold text-slate-800">Rekapitulasi Nilai</h3>
-          <button onclick="downloadPDF()" class="bg-emerald-600 text-white px-4 py-2 rounded text-sm">Download PDF</button>
+      <!-- Rekapitulasi & Download PDF -->
+      <div class="bg-white p-6 rounded-xl shadow border space-y-4">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-4">
+          <h3 class="font-bold text-xl text-slate-900">Rekapitulasi Hasil Penilaian</h3>
+          <button onclick="downloadPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition flex items-center gap-2">
+            📄 Unduh Laporan PDF
+          </button>
         </div>
-        <div id="pdfArea" class="space-y-6">
-          <h2 class="text-xl font-bold text-center" id="pdfTitle">REKAPITULASI PENILAIAN</h2>
-          <div><h4 class="font-bold text-indigo-800">SD/MI</h4><table class="w-full text-xs border" id="tableSD"></table></div>
-          <div><h4 class="font-bold text-indigo-800">Umum Formal</h4><table class="w-full text-xs border" id="tableFormal"></table></div>
-          <div><h4 class="font-bold text-indigo-800">Umum Hiburan</h4><table class="w-full text-xs border" id="tableHiburan"></table></div>
+
+        <div class="flex gap-2 border-b pb-2">
+          <button onclick="filterRekap('SD/MI')" id="tab-SD/MI" class="rekap-tab px-4 py-2 font-medium rounded-lg text-sm bg-indigo-100 text-indigo-700">SD/MI</button>
+          <button onclick="filterRekap('Umum Formal')" id="tab-Umum Formal" class="rekap-tab px-4 py-2 font-medium rounded-lg text-sm text-slate-600 hover:bg-slate-100">Umum Formal</button>
+          <button onclick="filterRekap('Umum Hiburan')" id="tab-Umum Hiburan" class="rekap-tab px-4 py-2 font-medium rounded-lg text-sm text-slate-600 hover:bg-slate-100">Umum Hiburan</button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr class="bg-slate-50 border-b">
+                <th class="p-3 border">Peringkat</th>
+                <th class="p-3 border">No. Peserta</th>
+                <th class="p-3 border">Nama Peserta</th>
+                <th class="p-3 border">Detail Nilai per Juri</th>
+                <th class="p-3 border font-bold text-indigo-700">Total Akumulasi</th>
+              </tr>
+            </thead>
+            <tbody id="rekapTableBody"></tbody>
+          </table>
         </div>
       </div>
     </section>
 
-    <!-- JURI SECTION -->
-    <section id="sectionJuri" class="hidden space-y-6">
-      <div class="bg-emerald-50 border-l-4 border-emerald-600 p-4 rounded">
-        <h2 class="text-xl font-bold text-emerald-900" id="juriWelcome">Selamat Menilai</h2>
-        <p class="text-sm text-emerald-700">Isi rentang nilai 50 - 100.</p>
-      </div>
-
-      <div class="bg-white p-5 rounded-xl shadow-sm border space-y-4">
-        <label class="block text-sm font-bold text-slate-700">Pilih Peserta:</label>
-        <select id="selectPesertaJuri" onchange="renderFormPenilaian()" class="w-full border p-3 rounded-lg text-sm bg-slate-50">
-          <option value="">-- Pilih Peserta --</option>
-        </select>
-      </div>
-
-      <form id="formPenilaianJuri" onsubmit="savePenilaian(event)" class="hidden bg-white p-6 rounded-xl shadow-sm border space-y-6">
-        <h3 class="font-bold text-lg border-b pb-2" id="evalPesertaInfo">-</h3>
-        <div id="dynamicKriteriaFields" class="space-y-4"></div>
-        <div class="bg-slate-50 p-4 rounded flex justify-between font-bold">
-          <span>Total Nilai:</span>
-          <span id="labelTotalNilai" class="text-xl text-emerald-600">0</span>
+    <!-- DASHBOARD JURI -->
+    <section id="juriView" class="hidden space-y-6">
+      <div class="bg-white p-6 rounded-xl shadow border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900">Lembar Penilaian Juri</h2>
+          <p class="text-slate-600 text-sm mt-1">Rentang Nilai per Kriteria: <span class="font-semibold text-emerald-600">50 - 100</span></p>
         </div>
-        <button type="submit" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-lg">Simpan Penilaian</button>
-      </form>
+        <div class="w-full sm:w-auto">
+          <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Filter Kategori</label>
+          <select id="juriKategoriFilter" onchange="renderJuriForm()" class="border p-2 rounded-lg text-sm w-full font-semibold">
+            <option value="SD/MI">Kategori SD/MI</option>
+            <option value="Umum Formal">Kategori Umum Formal</option>
+            <option value="Umum Hiburan">Kategori Umum Hiburan</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="juriCardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
     </section>
 
   </main>
 
   <script>
-    // Konfigurasi Firebase Realtime Public
-    const firebaseConfig = {
-      databaseURL: "https://lomba-online-default-rtdb.asia-southeast1.firebasedatabase.app"
+    // --- DATABASE SEMENTARA (LOCALSTORAGE) ---
+    const ADMIN_PASS = "Sepulu10oke";
+
+    let db = JSON.parse(localStorage.getItem('lombaDB')) || {
+      juri: [],
+      kriteria: [],
+      peserta: [],
+      nilai: {} // format: { pesertaId: { juriId: { kriteriaId: nilai } } }
     };
 
-    const ADMIN_PASSWORD = "Sepulu10oke";
+    let currentUser = null; // { role: 'admin' | 'juri', data: null | juriObj }
+    let activeKategoriRekap = 'SD/MI';
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    let dbData = { info: {}, juri: {}, peserta: {}, kriteria: {}, penilaian: {} };
-    let currentRole = null, currentJuriKey = null;
-
-    db.ref().on('value', (snapshot) => {
-      const val = snapshot.val() || {};
-      dbData.info = val.info || { namaLomba: 'Aplikasi Penilaian Lomba' };
-      dbData.juri = val.juri || {};
-      dbData.peserta = val.peserta || {};
-      dbData.kriteria = val.kriteria || {};
-      dbData.penilaian = val.penilaian || {};
-
-      document.getElementById('dbStatus').innerText = "Status: Online (Database Terhubung)";
-      document.getElementById('dbStatus').className = "text-xs text-emerald-200 font-semibold";
-
-      updateUI();
-      if (currentRole === 'juri') renderJuriOptions();
-    }, (err) => {
-      document.getElementById('dbStatus').innerText = "Status Error: " + err.message;
-    });
-
-    function showSection(id) {
-      ['sectionLogin', 'sectionAdmin', 'sectionJuri'].forEach(s => document.getElementById(s).classList.add('hidden'));
-      document.getElementById(id).classList.remove('hidden');
-      document.getElementById('btnLogout').classList.toggle('hidden', id === 'sectionLogin');
+    function saveData() {
+      localStorage.setItem('lombaDB', JSON.stringify(db));
     }
 
+    // --- LOGIKA NAVIGASI & SESI ---
+    function showView(viewId) {
+      ['homeView', 'adminView', 'juriView'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      document.getElementById(viewId).classList.remove('hidden');
+
+      const badge = document.getElementById('userBadge');
+      const roleTag = document.getElementById('roleTag');
+
+      if (currentUser) {
+        badge.classList.remove('hidden');
+        roleTag.innerText = currentUser.role === 'admin' ? 'Admin' : currentUser.data.nama;
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+
+    function logout() {
+      currentUser = null;
+      document.getElementById('adminPassword').value = '';
+      document.getElementById('juriPassword').value = '';
+      showView('homeView');
+      populateJuriSelect();
+    }
+
+    function populateJuriSelect() {
+      const select = document.getElementById('juriSelect');
+      select.innerHTML = '<option value="">-- Pilih Juri --</option>';
+      db.juri.forEach(j => {
+        select.innerHTML += `<option value="${j.id}">${j.nama}</option>`;
+      });
+    }
+
+    // --- AUTENTIKASI ---
     function loginAdmin(e) {
       e.preventDefault();
-      if (document.getElementById('inputPassAdmin').value === ADMIN_PASSWORD) {
-        currentRole = 'admin'; showSection('sectionAdmin'); updateUI();
-      } else { alert('Password Admin Salah!'); }
+      const pass = document.getElementById('adminPassword').value;
+      if (pass === ADMIN_PASS) {
+        currentUser = { role: 'admin', data: null };
+        showView('adminView');
+        renderAdminDashboard();
+      } else {
+        alert("Kata sandi admin salah!");
+      }
     }
 
     function loginJuri(e) {
       e.preventDefault();
-      const pass = document.getElementById('inputPassJuri').value;
-      const key = Object.keys(dbData.juri).find(k => dbData.juri[k].pass === pass);
-      if (key) {
-        currentRole = 'juri'; currentJuriKey = key;
-        document.getElementById('juriWelcome').innerText = `Selamat Menilai, ${dbData.juri[key].nama}`;
-        showSection('sectionJuri'); renderJuriOptions();
-      } else { alert('Password Juri Salah / Tidak Ada!'); }
+      const juriId = document.getElementById('juriSelect').value;
+      const pass = document.getElementById('juriPassword').value;
+
+      const juri = db.juri.find(j => j.id == juriId && j.pass === pass);
+      if (juri) {
+        currentUser = { role: 'juri', data: juri };
+        showView('juriView');
+        renderJuriForm();
+      } else {
+        alert("Pilihan Juri atau kata sandi juri salah!");
+      }
     }
 
-    function logout() { currentRole = null; currentJuriKey = null; showSection('sectionLogin'); }
-
-    function setNamaLomba(e) { e.preventDefault(); db.ref('info/namaLomba').set(document.getElementById('inputNamaLomba').value); }
-    function addJuri(e) { e.preventDefault(); db.ref('juri').push({ nama: document.getElementById('juriName').value, pass: document.getElementById('juriPass').value }); }
-    function deleteJuri(k) { db.ref(`juri/${k}`).remove(); }
-    function addPeserta(e) { e.preventDefault(); db.ref('peserta').push({ no: document.getElementById('pesertaNo').value, nama: document.getElementById('pesertaNama').value, kategori: document.getElementById('pesertaKategori').value }); }
-    function addKriteria(e) { e.preventDefault(); db.ref('kriteria').push({ nama: document.getElementById('kriteriaNama').value }); }
-    function deleteKriteria(k) { db.ref(`kriteria/${k}`).remove(); }
-    function resetAllData() { if(confirm('Hapus seluruh data?')) db.ref().remove(); }
-
-    function updateUI() {
-      const title = dbData.info.namaLomba || 'Aplikasi Penilaian Lomba';
-      document.getElementById('appHeaderTitle').innerText = title;
-      document.getElementById('loginHeaderTitle').innerText = title;
-      document.getElementById('pdfTitle').innerText = `REKAPITULASI PENILAIAN ${title.toUpperCase()}`;
-
-      const listJuri = document.getElementById('listJuri');
-      listJuri.innerHTML = '';
-      Object.keys(dbData.juri).forEach(k => {
-        listJuri.innerHTML += `<li class="py-2 flex justify-between"><span>${dbData.juri[k].nama} (Pass: ${dbData.juri[k].pass})</span><button onclick="deleteJuri('${k}')" class="text-red-500">Hapus</button></li>`;
-      });
-
-      const listKriteria = document.getElementById('listKriteria');
-      listKriteria.innerHTML = '';
-      Object.keys(dbData.kriteria).forEach(k => {
-        listKriteria.innerHTML += `<li class="py-2 flex justify-between"><span>${dbData.kriteria[k].nama}</span><button onclick="deleteKriteria('${k}')" class="text-red-500">Hapus</button></li>`;
-      });
-
-      document.getElementById('listPesertaCount').innerText = `Total Peserta: ${Object.keys(dbData.peserta).length}`;
-      renderTable('SD/MI', 'tableSD');
-      renderTable('Umum Formal', 'tableFormal');
-      renderTable('Umum Hiburan', 'tableHiburan');
-    }
-
-    function renderTable(kategori, tableId) {
-      const table = document.getElementById(tableId);
-      const kKeys = Object.keys(dbData.kriteria);
-      const jKeys = Object.keys(dbData.juri);
-
-      let pesertaList = [];
-      Object.keys(dbData.peserta).forEach(pk => {
-        if (dbData.peserta[pk].kategori === kategori) {
-          let grand = 0;
-          let scores = {};
-          jKeys.forEach(jk => {
-            let totalJ = 0;
-            scores[jk] = {};
-            kKeys.forEach(kk => {
-              let val = dbData.penilaian[`${pk}_${jk}_${kk}`] || 0;
-              scores[jk][kk] = val;
-              totalJ += Number(val);
-            });
-            scores[jk].total = totalJ;
-            grand += totalJ;
-          });
-          pesertaList.push({ ...dbData.peserta[pk], grand, scores });
-        }
-      });
-
-      pesertaList.sort((a,b) => b.grand - a.grand);
-
-      let html = `<thead><tr class="bg-slate-200"><th class="p-1 border">No</th><th class="p-1 border">Nama</th>`;
-      jKeys.forEach(jk => {
-        kKeys.forEach(kk => html += `<th class="p-1 border">${dbData.juri[jk].nama}<br>(${dbData.kriteria[kk].nama})</th>`);
-        html += `<th class="p-1 border bg-slate-300">Total ${dbData.juri[jk].nama}</th>`;
-      });
-      html += `<th class="p-1 border bg-indigo-200">Grand Total</th></tr></thead><tbody>`;
-
-      pesertaList.forEach(p => {
-        html += `<tr><td class="p-1 border text-center font-bold">${p.no}</td><td class="p-1 border">${p.nama}</td>`;
-        jKeys.forEach(jk => {
-          kKeys.forEach(kk => html += `<td class="p-1 border text-center">${p.scores[jk][kk] || '-'}</td>`);
-          html += `<td class="p-1 border text-center font-bold">${p.scores[jk].total}</td>`;
-        });
-        html += `<td class="p-1 border text-center font-bold text-indigo-700 bg-indigo-50">${p.grand}</td></tr>`;
-      });
-
-      table.innerHTML = html + `</tbody>`;
-    }
-
-    function renderJuriOptions() {
-      const select = document.getElementById('selectPesertaJuri');
-      select.innerHTML = '<option value="">-- Pilih Peserta --</option>';
-      Object.keys(dbData.peserta).forEach(pk => {
-        const p = dbData.peserta[pk];
-        select.innerHTML += `<option value="${pk}">[${p.kategori}] No. ${p.no} - ${p.nama}</option>`;
-      });
-    }
-
-    function renderFormPenilaian() {
-      const pId = document.getElementById('selectPesertaJuri').value;
-      const form = document.getElementById('formPenilaianJuri');
-      const fields = document.getElementById('dynamicKriteriaFields');
-      if (!pId) return form.classList.add('hidden');
-
-      const p = dbData.peserta[pId];
-      document.getElementById('evalPesertaInfo').innerText = `Menilai: [${p.kategori}] No. ${p.no} - ${p.nama}`;
-      fields.innerHTML = '';
-
-      Object.keys(dbData.kriteria).forEach(kk => {
-        const val = dbData.penilaian[`${pId}_${currentJuriKey}_${kk}`] || 50;
-        fields.innerHTML += `
-          <div>
-            <label class="block text-sm font-semibold">${dbData.kriteria[kk].nama}</label>
-            <input type="number" min="50" max="100" data-k="${kk}" value="${val}" oninput="calcTotal()" class="inputScore w-full border p-2 rounded" required />
-          </div>`;
-      });
-      form.classList.remove('hidden');
-      calcTotal();
-    }
-
-    function calcTotal() {
-      let tot = 0;
-      document.querySelectorAll('.inputScore').forEach(i => tot += parseInt(i.value) || 0);
-      document.getElementById('labelTotalNilai').innerText = tot;
-    }
-
-    function savePenilaian(e) {
+    // --- MANAJEMEN ADMIN ---
+    function addJuri(e) {
       e.preventDefault();
-      const pId = document.getElementById('selectPesertaJuri').value;
-      document.querySelectorAll('.inputScore').forEach(input => {
-        const kk = input.getAttribute('data-k');
-        db.ref(`penilaian/${pId}_${currentJuriKey}_${kk}`).set(parseInt(input.value));
-      });
-      alert('Berhasil Menyimpan Nilai!');
+      const nama = document.getElementById('newJuriName').value.trim();
+      const pass = document.getElementById('newJuriPass').value.trim();
+
+      db.juri.push({ id: Date.now(), nama, pass });
+      saveData();
+      document.getElementById('newJuriName').value = '';
+      document.getElementById('newJuriPass').value = '';
+      renderAdminDashboard();
+      populateJuriSelect();
     }
 
-    function downloadPDF() {
-      html2pdf().from(document.getElementById('pdfArea')).save('Rekap_Penilaian.pdf');
+    function addKriteria(e) {
+      e.preventDefault();
+      const nama = document.getElementById('newKriteria').value.trim();
+
+      db.kriteria.push({ id: Date.now(), nama });
+      saveData();
+      document.getElementById('newKriteria').value = '';
+      renderAdminDashboard();
     }
+
+    function addPeserta(e) {
+      e.preventDefault();
+      const nomor = document.getElementById('nomorPeserta').value.trim();
+      const nama = document.getElementById('namaPeserta').value.trim();
+      const kategori = document.getElementById('kategoriPeserta').value;
+
+      db.peserta.push({ id: Date.now(), nomor, nama, kategori });
+      saveData();
+      document.getElementById('nomorPeserta').value = '';
+      document.getElementById('namaPeserta').value = '';
+      renderAdminDashboard();
+    }
+
+    function resetAllData() {
+      if (confirm("Apakah Anda yakin ingin menghapus SELURUH data (Juri, Kriteria, Peserta, dan Penilaian)? Tindakan ini tidak dapat dibatalkan!")) {
+        db = { juri: [], kriteria: [], peserta: [], nilai: {} };
+        saveData();
+        renderAdminDashboard();
+        populateJuriSelect();
+        alert("Seluruh data berhasil dihapus.");
+      }
+    }
+
+    // --- RENDER DASHBOARD ADMIN ---
+    function renderAdminDashboard() {
+      // List Juri
+      const juriList = document.getElementById('juriList');
+      juriList.innerHTML = db.juri.length ? '' : '<li class="text-slate-400 italic">Belum ada juri</li>';
+      db.juri.forEach(j => {
+        juriList.innerHTML += `<li class="flex justify-between py-1 border-b"><span>${j.nama}</span> <span class="text-slate-400 font-mono text-xs">Pass: ${j.pass}</span></li>`;
+      });
+
+      // List Kriteria
+      const kriteriaList = document.getElementById('kriteriaList');
+      kriteriaList.innerHTML = db.kriteria.length ? '' : '<li class="text-slate-400 italic">Belum ada kriteria</li>';
+      db.kriteria.forEach(k => {
+        kriteriaList.innerHTML += `<li class="py-1 border-b">${k.nama}</li>`;
+      });
+
+      renderRekapTable();
+    }
+
+    function filterRekap(kategori) {
+      activeKategoriRekap = kategori;
+      document.querySelectorAll('.rekap-tab').forEach(tab => {
+        tab.className = 'rekap-tab px-4 py-2 font-medium rounded-lg text-sm text-slate-600 hover:bg-slate-100';
+      });
+      document.getElementById(`tab-${kategori}`).className = 'rekap-tab px-4 py-2 font-medium rounded-lg text-sm bg-indigo-100 text-indigo-700';
+      renderRekapTable();
+    }
+
+    function getHasilKategori(kategori) {
+      const pesertaKategori = db.peserta.filter(p => p.kategori === kategori);
+
+      const hasil = pesertaKategori.map(p => {
+        let grandTotal = 0;
+        let detailJuri = [];
+
+        db.juri.forEach(j => {
+          let totalJuri = 0;
+          let detailKriteria = [];
+
+          db.kriteria.forEach(k => {
+            const val = Number(db.nilai?.[p.id]?.[j.id]?.[k.id]) || 0;
+            totalJuri += val;
+            detailKriteria.push({ kriteria: k.nama, nilai: val });
+          });
+
+          grandTotal += totalJuri;
+          detailJuri.push({ juri: j.nama, totalJuri, detailKriteria });
+        });
+
+        return { ...p, grandTotal, detailJuri };
+      });
+
+      // Urutkan dari nilai tertinggi ke terendah
+      hasil.sort((a, b) => b.grandTotal - a.grandTotal);
+      return hasil;
+    }
+
+    function renderRekapTable() {
+      const tbody = document.getElementById('rekapTableBody');
+      const data = getHasilKategori(activeKategoriRekap);
+
+      tbody.innerHTML = '';
+      if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400 italic">Belum ada peserta di kategori ini</td></tr>`;
+        return;
+      }
+
+      data.forEach((p, idx) => {
+        let detailHTML = '<div class="space-y-1 text-xs">';
+        p.detailJuri.forEach(dj => {
+          const kriteriaStr = dj.detailKriteria.map(dk => `${dk.kriteria}: ${dk.nilai}`).join(', ');
+          detailHTML += `<div><span class="font-semibold">${dj.juri}:</span> ${kriteriaStr || '-'} <span class="font-bold text-slate-700">(Total: ${dj.totalJuri})</span></div>`;
+        });
+        detailHTML += '</div>';
+
+        tbody.innerHTML += `
+          <tr class="border-b hover:bg-slate-50">
+            <td class="p-3 border font-bold text-center">${idx + 1}</td>
+            <td class="p-3 border font-mono">${p.nomor}</td>
+            <td class="p-3 border font-semibold">${p.nama}</td>
+            <td class="p-3 border">${detailHTML}</td>
+            <td class="p-3 border font-extrabold text-indigo-700 text-base">${p.grandTotal}</td>
+          </tr>
+        `;
+      });
+    }
+
+    // --- RENDER FORM JURI ---
+    function renderJuriForm() {
+      const container = document.getElementById('juriCardsContainer');
+      const selectedKat = document.getElementById('juriKategoriFilter').value;
+      const juriId = currentUser.data.id;
+
+      const pesertaFiltered = db.peserta.filter(p => p.kategori === selectedKat);
+      container.innerHTML = '';
+
+      if (db.kriteria.length === 0) {
+        container.innerHTML = `<div class="col-span-full bg-amber-50 text-amber-700 p-4 rounded-lg border border-amber-200 text-center">Admin belum memasukkan kriteria penilaian.</div>`;
+        return;
+      }
+
+      if (pesertaFiltered.length === 0) {
+        container.innerHTML = `<div class="col-span-full bg-white p-6 text-center text-slate-400 rounded-lg border">Tidak ada peserta dalam kategori ini.</div>`;
+        return;
+      }
+
+      pesertaFiltered.forEach(p => {
+        let kriteriaInputsHTML = '';
+        let currentTotal = 0;
+
+        db.kriteria.forEach(k => {
+          const val = db.nilai?.[p.id]?.[juriId]?.[k.id] || '';
+          if (val) currentTotal += Number(val);
+
+          kriteriaInputsHTML += `
+            <div class="flex justify-between items-center gap-2">
+              <label class="text-sm font-medium text-slate-700">${k.nama}</label>
+              <input type="number" min="50" max="100" value="${val}"
+                onchange="simpanNilai(${p.id}, ${k.id}, this.value)"
+                required class="w-24 border p-2 rounded text-center font-bold focus:ring-2 focus:ring-emerald-500 outline-none"
+                placeholder="50-100">
+            </div>
+          `;
+        });
+
+        container.innerHTML += `
+          <div class="bg-white p-5 rounded-xl shadow border space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+              <div>
+                <span class="text-xs bg-slate-200 px-2 py-0.5 rounded font-mono font-bold">No. ${p.nomor}</span>
+                <h3 class="text-lg font-bold text-slate-900 mt-1">${p.nama}</h3>
+              </div>
+              <div class="text-right">
+                <span class="text-xs text-slate-500 block">Total Nilai Anda</span>
+                <span class="text-xl font-extrabold text-emerald-600">${currentTotal}</span>
+              </div>
+            </div>
+            <div class="space-y-3">
+              ${kriteriaInputsHTML}
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function simpanNilai(pesertaId, kriteriaId, nilaiVal) {
+      let val = Number(nilaiVal);
+
+      // Validasi Batas Rentang Nilai 50-100
+      if (val < 50) val = 50;
+      if (val > 100) val = 100;
+
+      const juriId = currentUser.data.id;
+
+      if (!db.nilai) db.nilai = {};
+      if (!db.nilai[pesertaId]) db.nilai[pesertaId] = {};
+      if (!db.nilai[pesertaId][juriId]) db.nilai[pesertaId][juriId] = {};
+
+      db.nilai[pesertaId][juriId][kriteriaId] = val;
+      saveData();
+      renderJuriForm();
+    }
+
+    // --- EKSPOR PDF ---
+    function downloadPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('landscape');
+
+      doc.setFontSize(16);
+      doc.text("LAPORAN HASIL PENILAIAN LOMBA", 14, 15);
+      doc.setFontSize(10);
+      doc.text(`Kategori: ${activeKategoriRekap}`, 14, 22);
+
+      const data = getHasilKategori(activeKategoriRekap);
+
+      // Header Kolom Dinamis
+      let tableHeaders = ["Rank", "No. Peserta", "Nama Peserta"];
+
+      db.juri.forEach(j => {
+        db.kriteria.forEach(k => {
+          tableHeaders.push(`${j.nama}\n(${k.nama})`);
+        });
+        tableHeaders.push(`Total\n${j.nama}`);
+      });
+
+      tableHeaders.push("GRAND TOTAL");
+
+      // Baris Data
+      let tableRows = [];
+
+      data.forEach((p, idx) => {
+        let row = [idx + 1, p.nomor, p.nama];
+
+        p.detailJuri.forEach(dj => {
+          dj.detailKriteria.forEach(dk => {
+            row.push(dk.nilai || 0);
+          });
+          row.push(dj.totalJuri);
+        });
+
+        row.push(p.grandTotal);
+        tableRows.push(row);
+      });
+
+      doc.autoTable({
+        head: [tableHeaders],
+        body: tableRows,
+        startY: 28,
+        theme: 'grid',
+        headStyles: { fillColor: [49, 46, 129], halign: 'center', fontSize: 8 },
+        bodyStyles: { fontSize: 8 },
+        columnStyles: { 0: { halign: 'center' }, 1: { halign: 'center' } }
+      });
+
+      doc.save(`Hasil_Lomba_${activeKategoriRekap.replace('/', '_')}.pdf`);
+    }
+
+    // --- INISIALISASI ---
+    populateJuriSelect();
   </script>
 </body>
 </html>
