@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Aplikasi Penilaian Lomba Online</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase SDK Legacy v8 -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -14,7 +15,7 @@
   <header class="bg-indigo-700 text-white p-4 shadow-md flex justify-between items-center">
     <div>
       <h1 class="text-xl font-bold" id="appHeaderTitle">Aplikasi Penilaian Lomba</h1>
-      <p class="text-xs text-indigo-200" id="dbStatus">Status: Menghubungkan ke Server...</p>
+      <p class="text-xs text-indigo-200" id="dbStatus">Status: Menghubungkan ke Database...</p>
     </div>
     <button id="btnLogout" onclick="logout()" class="hidden bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1 rounded transition">
       Keluar
@@ -23,461 +24,318 @@
 
   <main class="container mx-auto p-4 max-w-6xl">
 
+    <!-- LOGIN SECTION -->
     <section id="sectionLogin" class="space-y-6">
       <div class="text-center my-6">
         <h2 class="text-2xl font-bold text-slate-700" id="loginHeaderTitle">Selamat Datang</h2>
-        <p class="text-slate-500">Silakan masuk menggunakan password Admin atau Juri</p>
+        <p class="text-slate-500">Masuk menggunakan password Admin atau Juri</p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-        <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200">
+        <div class="bg-white p-6 rounded-xl shadow-md border">
           <h3 class="text-lg font-bold text-indigo-700 mb-4 border-b pb-2">Login Admin</h3>
           <form onsubmit="loginAdmin(event)" class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium mb-1">Password Admin</label>
-              <input type="password" id="inputPassAdmin" class="w-full border rounded p-2 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Password Admin" required />
-            </div>
-            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded font-medium transition">
-              Masuk Admin
-            </button>
+            <input type="password" id="inputPassAdmin" class="w-full border rounded p-2 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Password Admin" required />
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded font-medium">Masuk Admin</button>
           </form>
         </div>
 
-        <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200">
+        <div class="bg-white p-6 rounded-xl shadow-md border">
           <h3 class="text-lg font-bold text-emerald-700 mb-4 border-b pb-2">Login Juri</h3>
           <form onsubmit="loginJuri(event)" class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium mb-1">Password Juri</label>
-              <input type="password" id="inputPassJuri" class="w-full border rounded p-2 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Password Juri" required />
-            </div>
-            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded font-medium transition">
-              Masuk Juri
-            </button>
+            <input type="password" id="inputPassJuri" class="w-full border rounded p-2 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Password Juri" required />
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded font-medium">Masuk Juri</button>
           </form>
         </div>
       </div>
     </section>
 
+    <!-- ADMIN SECTION -->
     <section id="sectionAdmin" class="hidden space-y-8">
       <div class="bg-indigo-50 border-l-4 border-indigo-600 p-4 rounded flex justify-between items-center flex-wrap gap-2">
         <div>
           <h2 class="text-xl font-bold text-indigo-900">Panel Kontrol Admin</h2>
-          <p class="text-sm text-indigo-700">Kelola lomba, juri, peserta, kriteria, dan rekap nilai secara realtime.</p>
+          <p class="text-sm text-indigo-700">Data tersimpan otomatis secara realtime ke seluruh perangkat.</p>
         </div>
         <button onclick="resetAllData()" class="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-2 rounded shadow font-semibold">
-          Hapus Seluruh Data
+          Reset Seluruh Data
         </button>
       </div>
 
       <div class="bg-white p-5 rounded-xl shadow-sm border space-y-3">
-        <h3 class="font-bold text-slate-700 border-b pb-2">Judul / Nama Lomba</h3>
+        <h3 class="font-bold text-slate-700 border-b pb-2">Nama Lomba</h3>
         <form onsubmit="setNamaLomba(event)" class="flex gap-3">
-          <input type="text" id="inputNamaLomba" placeholder="Contoh: Lomba Mewarnai / Lomba Puisi" class="w-full border p-2 rounded text-sm" required />
-          <button type="submit" class="bg-indigo-600 text-white text-sm px-4 py-2 rounded font-medium whitespace-nowrap">Simpan Nama</button>
+          <input type="text" id="inputNamaLomba" placeholder="Nama Lomba..." class="w-full border p-2 rounded text-sm" required />
+          <button type="submit" class="bg-indigo-600 text-white text-sm px-4 py-2 rounded">Simpan</button>
         </form>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Input Juri -->
         <div class="bg-white p-5 rounded-xl shadow-sm border space-y-4">
           <h3 class="font-bold text-slate-700 border-b pb-2">1. Kelola Juri</h3>
           <form onsubmit="addJuri(event)" class="space-y-3">
-            <input type="text" id="juriName" placeholder="Nama Juri (misal: Juri 1)" class="w-full border p-2 rounded text-sm" required />
+            <input type="text" id="juriName" placeholder="Nama Juri" class="w-full border p-2 rounded text-sm" required />
             <input type="password" id="juriPass" placeholder="Password Juri" class="w-full border p-2 rounded text-sm" required />
-            <button type="submit" class="w-full bg-indigo-600 text-white text-sm py-2 rounded font-medium">Tambah Juri</button>
+            <button type="submit" class="w-full bg-indigo-600 text-white text-sm py-2 rounded">Tambah Juri</button>
           </form>
-          <ul id="listJuri" class="text-sm divide-y max-h-48 overflow-y-auto"></ul>
+          <ul id="listJuri" class="text-sm divide-y"></ul>
         </div>
 
+        <!-- Input Peserta -->
         <div class="bg-white p-5 rounded-xl shadow-sm border space-y-4">
           <h3 class="font-bold text-slate-700 border-b pb-2">2. Kelola Peserta</h3>
           <form onsubmit="addPeserta(event)" class="space-y-3">
-            <input type="text" id="pesertaNo" placeholder="Nomor Peserta" class="w-full border p-2 rounded text-sm" required />
-            <input type="text" id="pesertaNama" placeholder="Nama Peserta / Kontingen" class="w-full border p-2 rounded text-sm" required />
+            <input type="text" id="pesertaNo" placeholder="No. Peserta" class="w-full border p-2 rounded text-sm" required />
+            <input type="text" id="pesertaNama" placeholder="Nama Peserta" class="w-full border p-2 rounded text-sm" required />
             <select id="pesertaKategori" class="w-full border p-2 rounded text-sm" required>
-              <option value="">-- Pilih Kategori --</option>
-              <option value="SD/MI">Kategori SD/MI</option>
-              <option value="Umum Formal">Kategori Umum Formal</option>
-              <option value="Umum Hiburan">Kategori Umum Hiburan</option>
+              <option value="">-- Kategori --</option>
+              <option value="SD/MI">SD/MI</option>
+              <option value="Umum Formal">Umum Formal</option>
+              <option value="Umum Hiburan">Umum Hiburan</option>
             </select>
-            <button type="submit" class="w-full bg-indigo-600 text-white text-sm py-2 rounded font-medium">Tambah Peserta</button>
+            <button type="submit" class="w-full bg-indigo-600 text-white text-sm py-2 rounded">Tambah Peserta</button>
           </form>
           <div id="listPesertaCount" class="text-xs text-slate-500"></div>
         </div>
 
+        <!-- Input Kriteria -->
         <div class="bg-white p-5 rounded-xl shadow-sm border space-y-4">
           <h3 class="font-bold text-slate-700 border-b pb-2">3. Kriteria Penilaian</h3>
           <form onsubmit="addKriteria(event)" class="space-y-3">
-            <input type="text" id="kriteriaNama" placeholder="Nama Kriteria Penilaian" class="w-full border p-2 rounded text-sm" required />
-            <button type="submit" class="w-full bg-indigo-600 text-white text-sm py-2 rounded font-medium">Tambah Kriteria</button>
+            <input type="text" id="kriteriaNama" placeholder="Nama Kriteria" class="w-full border p-2 rounded text-sm" required />
+            <button type="submit" class="w-full bg-indigo-600 text-white text-sm py-2 rounded">Tambah Kriteria</button>
           </form>
-          <ul id="listKriteria" class="text-sm divide-y max-h-48 overflow-y-auto"></ul>
+          <ul id="listKriteria" class="text-sm divide-y"></ul>
         </div>
       </div>
 
+      <!-- Rekap Nilai -->
       <div class="bg-white p-6 rounded-xl shadow-sm border space-y-6">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-4">
-          <div>
-            <h3 class="text-lg font-bold text-slate-800">Hasil Rekapitulasi Penilaian Lomba</h3>
-            <p class="text-xs text-slate-500">Terurut otomatis dari akumulasi nilai tertinggi ke terendah</p>
-          </div>
-          <button onclick="downloadPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2 rounded text-sm shadow">
-            Download Rekap PDF
-          </button>
+        <div class="flex justify-between items-center border-b pb-4">
+          <h3 class="text-lg font-bold text-slate-800">Rekapitulasi Nilai</h3>
+          <button onclick="downloadPDF()" class="bg-emerald-600 text-white px-4 py-2 rounded text-sm">Download PDF</button>
         </div>
-
-        <div id="pdfArea" class="space-y-8 p-2">
-          <div class="text-center py-2">
-            <h2 class="text-xl font-bold uppercase tracking-wider text-slate-800" id="pdfTitle">REKAPITULASI HASIL PENILAIAN LOMBA</h2>
-            <hr class="my-3 border-slate-300">
-          </div>
-
-          <div>
-            <h4 class="font-bold text-indigo-800 mb-2 border-b-2 border-indigo-800 pb-1 text-sm uppercase">Kategori: SD/MI</h4>
-            <div class="overflow-x-auto"><table class="w-full text-xs text-left border-collapse border border-slate-300" id="tableSD"></table></div>
-          </div>
-          <div>
-            <h4 class="font-bold text-indigo-800 mb-2 border-b-2 border-indigo-800 pb-1 text-sm uppercase">Kategori: Umum Formal</h4>
-            <div class="overflow-x-auto"><table class="w-full text-xs text-left border-collapse border border-slate-300" id="tableFormal"></table></div>
-          </div>
-          <div>
-            <h4 class="font-bold text-indigo-800 mb-2 border-b-2 border-indigo-800 pb-1 text-sm uppercase">Kategori: Umum Hiburan</h4>
-            <div class="overflow-x-auto"><table class="w-full text-xs text-left border-collapse border border-slate-300" id="tableHiburan"></table></div>
-          </div>
+        <div id="pdfArea" class="space-y-6">
+          <h2 class="text-xl font-bold text-center" id="pdfTitle">REKAPITULASI PENILAIAN</h2>
+          <div><h4 class="font-bold text-indigo-800">SD/MI</h4><table class="w-full text-xs border" id="tableSD"></table></div>
+          <div><h4 class="font-bold text-indigo-800">Umum Formal</h4><table class="w-full text-xs border" id="tableFormal"></table></div>
+          <div><h4 class="font-bold text-indigo-800">Umum Hiburan</h4><table class="w-full text-xs border" id="tableHiburan"></table></div>
         </div>
       </div>
     </section>
 
+    <!-- JURI SECTION -->
     <section id="sectionJuri" class="hidden space-y-6">
       <div class="bg-emerald-50 border-l-4 border-emerald-600 p-4 rounded">
         <h2 class="text-xl font-bold text-emerald-900" id="juriWelcome">Selamat Menilai</h2>
-        <p class="text-sm text-emerald-700">Rentang nilai masing-masing kriteria adalah <strong>50 - 100</strong>.</p>
+        <p class="text-sm text-emerald-700">Isi rentang nilai 50 - 100.</p>
       </div>
 
       <div class="bg-white p-5 rounded-xl shadow-sm border space-y-4">
-        <label class="block text-sm font-bold text-slate-700">Pilih Peserta Lomba:</label>
-        <select id="selectPesertaJuri" onchange="renderFormPenilaian()" class="w-full border p-3 rounded-lg text-sm bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none">
+        <label class="block text-sm font-bold text-slate-700">Pilih Peserta:</label>
+        <select id="selectPesertaJuri" onchange="renderFormPenilaian()" class="w-full border p-3 rounded-lg text-sm bg-slate-50">
           <option value="">-- Pilih Peserta --</option>
         </select>
       </div>
 
       <form id="formPenilaianJuri" onsubmit="savePenilaian(event)" class="hidden bg-white p-6 rounded-xl shadow-sm border space-y-6">
-        <div class="border-b pb-3">
-          <h3 class="font-bold text-lg text-slate-800" id="evalPesertaInfo">-</h3>
-        </div>
-
+        <h3 class="font-bold text-lg border-b pb-2" id="evalPesertaInfo">-</h3>
         <div id="dynamicKriteriaFields" class="space-y-4"></div>
-
-        <div class="bg-slate-50 p-4 rounded-lg flex justify-between items-center font-bold text-slate-700 border">
-          <span>Total Akumulasi Kriteria:</span>
+        <div class="bg-slate-50 p-4 rounded flex justify-between font-bold">
+          <span>Total Nilai:</span>
           <span id="labelTotalNilai" class="text-xl text-emerald-600">0</span>
         </div>
-
-        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg shadow transition">
-          Simpan Penilaian
-        </button>
+        <button type="submit" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-lg">Simpan Penilaian</button>
       </form>
     </section>
 
   </main>
 
   <script>
-    // =========================================================================
-    // PASTE KODE FIREBASE CONFIG ASLI ANDA DI BAWAH INI (GANTI KODE DUMMY INI):
-    // =========================================================================
+    // Konfigurasi Firebase Realtime Public
     const firebaseConfig = {
-      apiKey: "AIzaSyXXXXXXXXXXXXXXX",
-      authDomain: "proyek-anda.firebaseapp.com",
-      databaseURL: "https://proyek-anda-default-rtdb.firebaseio.com",
-      projectId: "proyek-anda",
-      storageBucket: "proyek-anda.appspot.com",
-      messagingSenderId: "123456789",
-      appId: "1:123456789:web:abcdef"
+      databaseURL: "https://lomba-online-default-rtdb.asia-southeast1.firebasedatabase.app"
     };
-    // =========================================================================
 
     const ADMIN_PASSWORD = "Sepulu10oke";
 
-    let db;
-    try {
-      firebase.initializeApp(firebaseConfig);
-      db = firebase.database();
-    } catch(err) {
-      console.error("Firebase Error:", err);
-    }
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
     let dbData = { info: {}, juri: {}, peserta: {}, kriteria: {}, penilaian: {} };
     let currentRole = null, currentJuriKey = null;
 
-    if (db) {
-      db.ref().on('value', (snapshot) => {
-        const val = snapshot.val() || {};
-        dbData.info = val.info || { namaLomba: 'Aplikasi Penilaian Lomba' };
-        dbData.juri = val.juri || {};
-        dbData.peserta = val.peserta || {};
-        dbData.kriteria = val.kriteria || {};
-        dbData.penilaian = val.penilaian || {};
+    db.ref().on('value', (snapshot) => {
+      const val = snapshot.val() || {};
+      dbData.info = val.info || { namaLomba: 'Aplikasi Penilaian Lomba' };
+      dbData.juri = val.juri || {};
+      dbData.peserta = val.peserta || {};
+      dbData.kriteria = val.kriteria || {};
+      dbData.penilaian = val.penilaian || {};
 
-        document.getElementById('dbStatus').innerText = "Status: Online (Terhubung Server Firebase)";
-        document.getElementById('dbStatus').className = "text-xs text-emerald-200 font-semibold";
+      document.getElementById('dbStatus').innerText = "Status: Online (Database Terhubung)";
+      document.getElementById('dbStatus').className = "text-xs text-emerald-200 font-semibold";
 
-        updateUI();
-        if (currentRole === 'juri') renderJuriOptions();
-      }, (error) => {
-        document.getElementById('dbStatus').innerText = "Status: Error / Izin Ditolak (" + error.message + ")";
-        document.getElementById('dbStatus').className = "text-xs text-red-300 font-semibold";
-      });
-    }
+      updateUI();
+      if (currentRole === 'juri') renderJuriOptions();
+    }, (err) => {
+      document.getElementById('dbStatus').innerText = "Status Error: " + err.message;
+    });
 
-    function showSection(targetId) {
-      document.getElementById('sectionLogin').classList.add('hidden');
-      document.getElementById('sectionAdmin').classList.add('hidden');
-      document.getElementById('sectionJuri').classList.add('hidden');
-      document.getElementById(targetId).classList.remove('hidden');
-      document.getElementById('btnLogout').classList.toggle('hidden', targetId === 'sectionLogin');
+    function showSection(id) {
+      ['sectionLogin', 'sectionAdmin', 'sectionJuri'].forEach(s => document.getElementById(s).classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
+      document.getElementById('btnLogout').classList.toggle('hidden', id === 'sectionLogin');
     }
 
     function loginAdmin(e) {
       e.preventDefault();
       if (document.getElementById('inputPassAdmin').value === ADMIN_PASSWORD) {
-        currentRole = 'admin';
-        showSection('sectionAdmin');
-        document.getElementById('inputPassAdmin').value = '';
-        updateUI();
-      } else {
-        alert('Password Admin Salah!');
-      }
+        currentRole = 'admin'; showSection('sectionAdmin'); updateUI();
+      } else { alert('Password Admin Salah!'); }
     }
 
     function loginJuri(e) {
       e.preventDefault();
       const pass = document.getElementById('inputPassJuri').value;
-      let foundKey = Object.keys(dbData.juri).find(key => dbData.juri[key].pass === pass);
-
-      if (foundKey) {
-        currentRole = 'juri';
-        currentJuriKey = foundKey;
-        document.getElementById('juriWelcome').innerText = `Selamat Menilai, ${dbData.juri[foundKey].nama}`;
-        showSection('sectionJuri');
-        document.getElementById('inputPassJuri').value = '';
-        renderJuriOptions();
-      } else {
-        alert('Password Juri tidak terdaftar!');
-      }
+      const key = Object.keys(dbData.juri).find(k => dbData.juri[k].pass === pass);
+      if (key) {
+        currentRole = 'juri'; currentJuriKey = key;
+        document.getElementById('juriWelcome').innerText = `Selamat Menilai, ${dbData.juri[key].nama}`;
+        showSection('sectionJuri'); renderJuriOptions();
+      } else { alert('Password Juri Salah / Tidak Ada!'); }
     }
 
     function logout() { currentRole = null; currentJuriKey = null; showSection('sectionLogin'); }
 
     function setNamaLomba(e) { e.preventDefault(); db.ref('info/namaLomba').set(document.getElementById('inputNamaLomba').value); }
-    function addJuri(e) {
-      e.preventDefault();
-      db.ref('juri').push({ nama: document.getElementById('juriName').value, pass: document.getElementById('juriPass').value });
-      document.getElementById('juriName').value = ''; document.getElementById('juriPass').value = '';
-    }
-    function deleteJuri(key) { if (confirm('Hapus Juri ini?')) db.ref(`juri/${key}`).remove(); }
-    function addPeserta(e) {
-      e.preventDefault();
-      db.ref('peserta').push({ no: document.getElementById('pesertaNo').value, nama: document.getElementById('pesertaNama').value, kategori: document.getElementById('pesertaKategori').value });
-      document.getElementById('pesertaNo').value = ''; document.getElementById('pesertaNama').value = '';
-    }
-    function addKriteria(e) {
-      e.preventDefault();
-      db.ref('kriteria').push({ nama: document.getElementById('kriteriaNama').value });
-      document.getElementById('kriteriaNama').value = '';
-    }
-    function deleteKriteria(key) { if (confirm('Hapus Kriteria ini?')) db.ref(`kriteria/${key}`).remove(); }
-    function resetAllData() { if (confirm('Hapus SELURUH Data?')) db.ref().remove(); }
+    function addJuri(e) { e.preventDefault(); db.ref('juri').push({ nama: document.getElementById('juriName').value, pass: document.getElementById('juriPass').value }); }
+    function deleteJuri(k) { db.ref(`juri/${k}`).remove(); }
+    function addPeserta(e) { e.preventDefault(); db.ref('peserta').push({ no: document.getElementById('pesertaNo').value, nama: document.getElementById('pesertaNama').value, kategori: document.getElementById('pesertaKategori').value }); }
+    function addKriteria(e) { e.preventDefault(); db.ref('kriteria').push({ nama: document.getElementById('kriteriaNama').value }); }
+    function deleteKriteria(k) { db.ref(`kriteria/${k}`).remove(); }
+    function resetAllData() { if(confirm('Hapus seluruh data?')) db.ref().remove(); }
 
     function updateUI() {
       const title = dbData.info.namaLomba || 'Aplikasi Penilaian Lomba';
       document.getElementById('appHeaderTitle').innerText = title;
       document.getElementById('loginHeaderTitle').innerText = title;
-      document.getElementById('pdfTitle').innerText = `REKAPITULASI HASIL PENILAIAN ${title.toUpperCase()}`;
-      document.getElementById('inputNamaLomba').value = dbData.info.namaLomba || '';
+      document.getElementById('pdfTitle').innerText = `REKAPITULASI PENILAIAN ${title.toUpperCase()}`;
 
       const listJuri = document.getElementById('listJuri');
       listJuri.innerHTML = '';
-      Object.keys(dbData.juri).forEach(key => {
-        listJuri.innerHTML += `<li class="py-2 flex justify-between items-center border-b">
-          <span><b>${dbData.juri[key].nama}</b> (Pass: ${dbData.juri[key].pass})</span>
-          <button onclick="deleteJuri('${key}')" class="text-red-500 font-bold hover:underline">Hapus</button>
-        </li>`;
+      Object.keys(dbData.juri).forEach(k => {
+        listJuri.innerHTML += `<li class="py-2 flex justify-between"><span>${dbData.juri[k].nama} (Pass: ${dbData.juri[k].pass})</span><button onclick="deleteJuri('${k}')" class="text-red-500">Hapus</button></li>`;
       });
 
       const listKriteria = document.getElementById('listKriteria');
       listKriteria.innerHTML = '';
-      Object.keys(dbData.kriteria).forEach(key => {
-        listKriteria.innerHTML += `<li class="py-2 flex justify-between items-center border-b">
-          <span>${dbData.kriteria[key].nama}</span>
-          <button onclick="deleteKriteria('${key}')" class="text-red-500 font-bold hover:underline">Hapus</button>
-        </li>`;
+      Object.keys(dbData.kriteria).forEach(k => {
+        listKriteria.innerHTML += `<li class="py-2 flex justify-between"><span>${dbData.kriteria[k].nama}</span><button onclick="deleteKriteria('${k}')" class="text-red-500">Hapus</button></li>`;
       });
 
       document.getElementById('listPesertaCount').innerText = `Total Peserta: ${Object.keys(dbData.peserta).length}`;
-
-      renderTabelKategori('SD/MI', 'tableSD');
-      renderTabelKategori('Umum Formal', 'tableFormal');
-      renderTabelKategori('Umum Hiburan', 'tableHiburan');
+      renderTable('SD/MI', 'tableSD');
+      renderTable('Umum Formal', 'tableFormal');
+      renderTable('Umum Hiburan', 'tableHiburan');
     }
 
-    function renderTabelKategori(kategori, tableId) {
+    function renderTable(kategori, tableId) {
       const table = document.getElementById(tableId);
-      const kriteriaKeys = Object.keys(dbData.kriteria);
-      const juriKeys = Object.keys(dbData.juri);
+      const kKeys = Object.keys(dbData.kriteria);
+      const jKeys = Object.keys(dbData.juri);
 
-      let listPeserta = [];
-      Object.keys(dbData.peserta).forEach(pKey => {
-        if (dbData.peserta[pKey].kategori === kategori) {
-          listPeserta.push({ id: pKey, ...dbData.peserta[pKey] });
+      let pesertaList = [];
+      Object.keys(dbData.peserta).forEach(pk => {
+        if (dbData.peserta[pk].kategori === kategori) {
+          let grand = 0;
+          let scores = {};
+          jKeys.forEach(jk => {
+            let totalJ = 0;
+            scores[jk] = {};
+            kKeys.forEach(kk => {
+              let val = dbData.penilaian[`${pk}_${jk}_${kk}`] || 0;
+              scores[jk][kk] = val;
+              totalJ += Number(val);
+            });
+            scores[jk].total = totalJ;
+            grand += totalJ;
+          });
+          pesertaList.push({ ...dbData.peserta[pk], grand, scores });
         }
       });
 
-      listPeserta.forEach(p => {
-        let grandTotal = 0;
-        p.juriScores = {};
-        juriKeys.forEach(jKey => {
-          let totalScoreJuri = 0;
-          p.juriScores[jKey] = { kriteria: {}, total: 0 };
-          kriteriaKeys.forEach(kKey => {
-            const val = dbData.penilaian[`${p.id}_${jKey}_${kKey}`] || 0;
-            p.juriScores[jKey].kriteria[kKey] = val;
-            totalScoreJuri += Number(val);
-          });
-          p.juriScores[jKey].total = totalScoreJuri;
-          grandTotal += totalScoreJuri;
+      pesertaList.sort((a,b) => b.grand - a.grand);
+
+      let html = `<thead><tr class="bg-slate-200"><th class="p-1 border">No</th><th class="p-1 border">Nama</th>`;
+      jKeys.forEach(jk => {
+        kKeys.forEach(kk => html += `<th class="p-1 border">${dbData.juri[jk].nama}<br>(${dbData.kriteria[kk].nama})</th>`);
+        html += `<th class="p-1 border bg-slate-300">Total ${dbData.juri[jk].nama}</th>`;
+      });
+      html += `<th class="p-1 border bg-indigo-200">Grand Total</th></tr></thead><tbody>`;
+
+      pesertaList.forEach(p => {
+        html += `<tr><td class="p-1 border text-center font-bold">${p.no}</td><td class="p-1 border">${p.nama}</td>`;
+        jKeys.forEach(jk => {
+          kKeys.forEach(kk => html += `<td class="p-1 border text-center">${p.scores[jk][kk] || '-'}</td>`);
+          html += `<td class="p-1 border text-center font-bold">${p.scores[jk].total}</td>`;
         });
-        p.grandTotal = grandTotal;
+        html += `<td class="p-1 border text-center font-bold text-indigo-700 bg-indigo-50">${p.grand}</td></tr>`;
       });
 
-      listPeserta.sort((a, b) => b.grandTotal - a.grandTotal);
-
-      let headerHTML = `<thead><tr class="bg-slate-100 border-b border-slate-300">
-        <th class="p-2 border border-slate-300 text-center">No. Peserta</th>
-        <th class="p-2 border border-slate-300">Nama Peserta</th>`;
-
-      juriKeys.forEach(jKey => {
-        kriteriaKeys.forEach(kKey => {
-          headerHTML += `<th class="p-1 border border-slate-300 text-center">${dbData.juri[jKey].nama}<br><span class="text-[10px] text-slate-500">(${dbData.kriteria[kKey].nama})</span></th>`;
-        });
-        headerHTML += `<th class="p-1 border border-slate-300 bg-slate-200 text-center">Total ${dbData.juri[jKey].nama}</th>`;
-      });
-
-      headerHTML += `<th class="p-2 border border-slate-300 bg-indigo-100 text-center">Total Akumulasi</th></tr></thead>`;
-
-      let bodyHTML = '<tbody>';
-      if (listPeserta.length === 0) {
-        bodyHTML += `<tr><td colspan="100" class="p-4 text-center text-slate-400">Belum ada peserta di kategori ini</td></tr>`;
-      } else {
-        listPeserta.forEach(p => {
-          bodyHTML += `<tr class="border-b border-slate-200">
-            <td class="p-2 border border-slate-300 font-bold text-center">${p.no}</td>
-            <td class="p-2 border border-slate-300 font-medium">${p.nama}</td>`;
-
-          juriKeys.forEach(jKey => {
-            kriteriaKeys.forEach(kKey => {
-              const score = p.juriScores[jKey].kriteria[kKey];
-              bodyHTML += `<td class="p-1 border border-slate-300 text-center">${score || '-'}</td>`;
-            });
-            bodyHTML += `<td class="p-1 border border-slate-300 bg-slate-50 font-semibold text-center">${p.juriScores[jKey].total}</td>`;
-          });
-
-          bodyHTML += `<td class="p-2 border border-slate-300 bg-indigo-50 font-bold text-center text-indigo-700">${p.grandTotal}</td></tr>`;
-        });
-      }
-      bodyHTML += '</tbody>';
-      table.innerHTML = headerHTML + bodyHTML;
+      table.innerHTML = html + `</tbody>`;
     }
 
     function renderJuriOptions() {
       const select = document.getElementById('selectPesertaJuri');
-      const curVal = select.value;
       select.innerHTML = '<option value="">-- Pilih Peserta --</option>';
-
-      Object.keys(dbData.peserta).forEach(pKey => {
-        const p = dbData.peserta[pKey];
-        select.innerHTML += `<option value="${pKey}">[${p.kategori}] - No ${p.no}: ${p.nama}</option>`;
+      Object.keys(dbData.peserta).forEach(pk => {
+        const p = dbData.peserta[pk];
+        select.innerHTML += `<option value="${pk}">[${p.kategori}] No. ${p.no} - ${p.nama}</option>`;
       });
-
-      select.value = curVal;
-      renderFormPenilaian();
     }
 
     function renderFormPenilaian() {
       const pId = document.getElementById('selectPesertaJuri').value;
       const form = document.getElementById('formPenilaianJuri');
       const fields = document.getElementById('dynamicKriteriaFields');
-
-      if (!pId) { form.classList.add('hidden'); return; }
+      if (!pId) return form.classList.add('hidden');
 
       const p = dbData.peserta[pId];
       document.getElementById('evalPesertaInfo').innerText = `Menilai: [${p.kategori}] No. ${p.no} - ${p.nama}`;
-
       fields.innerHTML = '';
-      const kriteriaKeys = Object.keys(dbData.kriteria);
 
-      if (kriteriaKeys.length === 0) {
-        fields.innerHTML = `<p class="text-red-500 text-sm">Belum ada kriteria dari Admin.</p>`;
-      }
-
-      kriteriaKeys.forEach(kKey => {
-        const currentVal = dbData.penilaian[`${pId}_${currentJuriKey}_${kKey}`] || 50;
+      Object.keys(dbData.kriteria).forEach(kk => {
+        const val = dbData.penilaian[`${pId}_${currentJuriKey}_${kk}`] || 50;
         fields.innerHTML += `
-          <div class="space-y-1">
-            <label class="block text-sm font-semibold">${dbData.kriteria[kKey].nama} (Rentang 50-100)</label>
-            <input type="number" min="50" max="100" data-kriteria="${kKey}" value="${currentVal}" 
-              oninput="hitungTotalJuri()" class="inputScore w-full border rounded p-2 focus:ring-2 focus:ring-emerald-500 outline-none" required />
+          <div>
+            <label class="block text-sm font-semibold">${dbData.kriteria[kk].nama}</label>
+            <input type="number" min="50" max="100" data-k="${kk}" value="${val}" oninput="calcTotal()" class="inputScore w-full border p-2 rounded" required />
           </div>`;
       });
-
       form.classList.remove('hidden');
-      hitungTotalJuri();
+      calcTotal();
     }
 
-    function hitungTotalJuri() {
-      let total = 0;
-      document.querySelectorAll('.inputScore').forEach(input => {
-        let val = parseInt(input.value) || 0;
-        if (val > 100) input.value = 100;
-        total += val;
-      });
-      document.getElementById('labelTotalNilai').innerText = total;
+    function calcTotal() {
+      let tot = 0;
+      document.querySelectorAll('.inputScore').forEach(i => tot += parseInt(i.value) || 0);
+      document.getElementById('labelTotalNilai').innerText = tot;
     }
 
     function savePenilaian(e) {
       e.preventDefault();
       const pId = document.getElementById('selectPesertaJuri').value;
-      const inputs = document.querySelectorAll('.inputScore');
-
-      let valid = true;
-      inputs.forEach(input => {
-        const val = parseInt(input.value);
-        if (val < 50 || val > 100) valid = false;
+      document.querySelectorAll('.inputScore').forEach(input => {
+        const kk = input.getAttribute('data-k');
+        db.ref(`penilaian/${pId}_${currentJuriKey}_${kk}`).set(parseInt(input.value));
       });
-
-      if (!valid) {
-        alert("Nilai harus berada di rentang 50 s/d 100!");
-        return;
-      }
-
-      inputs.forEach(input => {
-        const kKey = input.getAttribute('data-kriteria');
-        const val = parseInt(input.value);
-        db.ref(`penilaian/${pId}_${currentJuriKey}_${kKey}`).set(val);
-      });
-
-      alert("Nilai berhasil disimpan!");
+      alert('Berhasil Menyimpan Nilai!');
     }
 
     function downloadPDF() {
-      const element = document.getElementById('pdfArea');
-      const filename = (dbData.info.namaLomba || 'Rekap_Hasil_Penilaian').replace(/\s+/g, '_') + '.pdf';
-      const opt = {
-        margin:       0.3,
-        filename:     filename,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 },
-        jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' }
-      };
-      html2pdf().set(opt).from(element).save();
+      html2pdf().from(document.getElementById('pdfArea')).save('Rekap_Penilaian.pdf');
     }
   </script>
 </body>
