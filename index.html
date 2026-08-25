@@ -14,7 +14,7 @@
   <header class="bg-indigo-700 text-white p-4 shadow-md flex justify-between items-center">
     <div>
       <h1 class="text-xl font-bold" id="appHeaderTitle">Aplikasi Penilaian Lomba</h1>
-      <p class="text-xs text-indigo-200" id="dbStatus">Status: Menghubungkan ke Database Online...</p>
+      <p class="text-xs text-indigo-200" id="dbStatus">Status: Menghubungkan ke Server...</p>
     </div>
     <button id="btnLogout" onclick="logout()" class="hidden bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1 rounded transition">
       Keluar
@@ -48,7 +48,7 @@
           <form onsubmit="loginJuri(event)" class="space-y-4">
             <div>
               <label class="block text-sm font-medium mb-1">Password Juri</label>
-              <input type="password" id="inputPassJuri" class="w-full border rounded p-2 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Password Juri dari Admin" required />
+              <input type="password" id="inputPassJuri" class="w-full border rounded p-2 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Password Juri" required />
             </div>
             <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded font-medium transition">
               Masuk Juri
@@ -62,23 +62,22 @@
       <div class="bg-indigo-50 border-l-4 border-indigo-600 p-4 rounded flex justify-between items-center flex-wrap gap-2">
         <div>
           <h2 class="text-xl font-bold text-indigo-900">Panel Kontrol Admin</h2>
-          <p class="text-sm text-indigo-700">Kelola informasi lomba, juri, peserta, kriteria, dan hasil penilaian.</p>
+          <p class="text-sm text-indigo-700">Kelola lomba, juri, peserta, kriteria, dan rekap nilai secara realtime.</p>
         </div>
         <button onclick="resetAllData()" class="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-2 rounded shadow font-semibold">
-          Hapus Seluruh Data Inputan
+          Hapus Seluruh Data
         </button>
       </div>
 
       <div class="bg-white p-5 rounded-xl shadow-sm border space-y-3">
         <h3 class="font-bold text-slate-700 border-b pb-2">Judul / Nama Lomba</h3>
         <form onsubmit="setNamaLomba(event)" class="flex gap-3">
-          <input type="text" id="inputNamaLomba" placeholder="Contoh: Lomba Mewarnai / Lomba Puisi / Lomba Penilaian" class="w-full border p-2 rounded text-sm" required />
+          <input type="text" id="inputNamaLomba" placeholder="Contoh: Lomba Mewarnai / Lomba Puisi" class="w-full border p-2 rounded text-sm" required />
           <button type="submit" class="bg-indigo-600 text-white text-sm px-4 py-2 rounded font-medium whitespace-nowrap">Simpan Nama</button>
         </form>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
         <div class="bg-white p-5 rounded-xl shadow-sm border space-y-4">
           <h3 class="font-bold text-slate-700 border-b pb-2">1. Kelola Juri</h3>
           <form onsubmit="addJuri(event)" class="space-y-3">
@@ -92,7 +91,7 @@
         <div class="bg-white p-5 rounded-xl shadow-sm border space-y-4">
           <h3 class="font-bold text-slate-700 border-b pb-2">2. Kelola Peserta</h3>
           <form onsubmit="addPeserta(event)" class="space-y-3">
-            <input type="text" id="pesertaNo" placeholder="Nomor Peserta (Bebas)" class="w-full border p-2 rounded text-sm" required />
+            <input type="text" id="pesertaNo" placeholder="Nomor Peserta" class="w-full border p-2 rounded text-sm" required />
             <input type="text" id="pesertaNama" placeholder="Nama Peserta / Kontingen" class="w-full border p-2 rounded text-sm" required />
             <select id="pesertaKategori" class="w-full border p-2 rounded text-sm" required>
               <option value="">-- Pilih Kategori --</option>
@@ -113,48 +112,37 @@
           </form>
           <ul id="listKriteria" class="text-sm divide-y max-h-48 overflow-y-auto"></ul>
         </div>
-
       </div>
 
       <div class="bg-white p-6 rounded-xl shadow-sm border space-y-6">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-4">
           <div>
             <h3 class="text-lg font-bold text-slate-800">Hasil Rekapitulasi Penilaian Lomba</h3>
-            <p class="text-xs text-slate-500">Terurut dari total akumulasi nilai tertinggi ke terendah secara otomatis</p>
+            <p class="text-xs text-slate-500">Terurut otomatis dari akumulasi nilai tertinggi ke terendah</p>
           </div>
-          <button onclick="downloadPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2 rounded text-sm shadow flex items-center gap-2">
-            <span>Download Rekap PDF</span>
+          <button onclick="downloadPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2 rounded text-sm shadow">
+            Download Rekap PDF
           </button>
         </div>
 
         <div id="pdfArea" class="space-y-8 p-2">
           <div class="text-center py-2">
             <h2 class="text-xl font-bold uppercase tracking-wider text-slate-800" id="pdfTitle">REKAPITULASI HASIL PENILAIAN LOMBA</h2>
-            <p class="text-xs text-slate-500">Hasil penilaian gabungan seluruh juri berdasarkan urutan akumulasi nilai tertinggi</p>
             <hr class="my-3 border-slate-300">
           </div>
 
           <div>
             <h4 class="font-bold text-indigo-800 mb-2 border-b-2 border-indigo-800 pb-1 text-sm uppercase">Kategori: SD/MI</h4>
-            <div class="overflow-x-auto">
-              <table class="w-full text-xs text-left border-collapse border border-slate-300" id="tableSD"></table>
-            </div>
+            <div class="overflow-x-auto"><table class="w-full text-xs text-left border-collapse border border-slate-300" id="tableSD"></table></div>
           </div>
-
           <div>
             <h4 class="font-bold text-indigo-800 mb-2 border-b-2 border-indigo-800 pb-1 text-sm uppercase">Kategori: Umum Formal</h4>
-            <div class="overflow-x-auto">
-              <table class="w-full text-xs text-left border-collapse border border-slate-300" id="tableFormal"></table>
-            </div>
+            <div class="overflow-x-auto"><table class="w-full text-xs text-left border-collapse border border-slate-300" id="tableFormal"></table></div>
           </div>
-
           <div>
             <h4 class="font-bold text-indigo-800 mb-2 border-b-2 border-indigo-800 pb-1 text-sm uppercase">Kategori: Umum Hiburan</h4>
-            <div class="overflow-x-auto">
-              <table class="w-full text-xs text-left border-collapse border border-slate-300" id="tableHiburan"></table>
-            </div>
+            <div class="overflow-x-auto"><table class="w-full text-xs text-left border-collapse border border-slate-300" id="tableHiburan"></table></div>
           </div>
-
         </div>
       </div>
     </section>
@@ -193,59 +181,64 @@
   </main>
 
   <script>
-    // Database Online Siap Pakai (Sudah Terhubung dan Terbuka Aksesnya)
+    // =========================================================================
+    // PASTE KODE FIREBASE CONFIG ASLI ANDA DI BAWAH INI (GANTI KODE DUMMY INI):
+    // =========================================================================
     const firebaseConfig = {
-      databaseURL: "https://lomba-online-default-rtdb.asia-southeast1.firebasedatabase.app"
+      apiKey: "AIzaSyXXXXXXXXXXXXXXX",
+      authDomain: "proyek-anda.firebaseapp.com",
+      databaseURL: "https://proyek-anda-default-rtdb.firebaseio.com",
+      projectId: "proyek-anda",
+      storageBucket: "proyek-anda.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:abcdef"
     };
+    // =========================================================================
 
-    // Password Admin Utama
     const ADMIN_PASSWORD = "Sepulu10oke";
 
-    // Inisialisasi Firebase Realtime
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    let db;
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.database();
+    } catch(err) {
+      console.error("Firebase Error:", err);
+    }
 
-    let dbData = {
-      info: { namaLomba: 'Aplikasi Penilaian Lomba' },
-      juri: {},
-      peserta: {},
-      kriteria: {},
-      penilaian: {}
-    };
+    let dbData = { info: {}, juri: {}, peserta: {}, kriteria: {}, penilaian: {} };
+    let currentRole = null, currentJuriKey = null;
 
-    let currentRole = null;
-    let currentJuriKey = null;
+    if (db) {
+      db.ref().on('value', (snapshot) => {
+        const val = snapshot.val() || {};
+        dbData.info = val.info || { namaLomba: 'Aplikasi Penilaian Lomba' };
+        dbData.juri = val.juri || {};
+        dbData.peserta = val.peserta || {};
+        dbData.kriteria = val.kriteria || {};
+        dbData.penilaian = val.penilaian || {};
 
-    // Sinkronisasi Realtime dengan Database Cloud
-    db.ref().on('value', (snapshot) => {
-      const val = snapshot.val() || {};
-      dbData.info = val.info || { namaLomba: 'Aplikasi Penilaian Lomba' };
-      dbData.juri = val.juri || {};
-      dbData.peserta = val.peserta || {};
-      dbData.kriteria = val.kriteria || {};
-      dbData.penilaian = val.penilaian || {};
+        document.getElementById('dbStatus').innerText = "Status: Online (Terhubung Server Firebase)";
+        document.getElementById('dbStatus').className = "text-xs text-emerald-200 font-semibold";
 
-      document.getElementById('dbStatus').innerText = "Status: Online (Terhubung Server Cloud)";
-      document.getElementById('dbStatus').className = "text-xs text-emerald-200 font-semibold";
-
-      updateUI();
-      if (currentRole === 'juri') renderJuriOptions();
-    });
+        updateUI();
+        if (currentRole === 'juri') renderJuriOptions();
+      }, (error) => {
+        document.getElementById('dbStatus').innerText = "Status: Error / Izin Ditolak (" + error.message + ")";
+        document.getElementById('dbStatus').className = "text-xs text-red-300 font-semibold";
+      });
+    }
 
     function showSection(targetId) {
       document.getElementById('sectionLogin').classList.add('hidden');
       document.getElementById('sectionAdmin').classList.add('hidden');
       document.getElementById('sectionJuri').classList.add('hidden');
-      
       document.getElementById(targetId).classList.remove('hidden');
       document.getElementById('btnLogout').classList.toggle('hidden', targetId === 'sectionLogin');
     }
 
-    // Login Admin (Sepulu10oke)
     function loginAdmin(e) {
       e.preventDefault();
-      const pass = document.getElementById('inputPassAdmin').value;
-      if (pass === ADMIN_PASSWORD) {
+      if (document.getElementById('inputPassAdmin').value === ADMIN_PASSWORD) {
         currentRole = 'admin';
         showSection('sectionAdmin');
         document.getElementById('inputPassAdmin').value = '';
@@ -255,15 +248,10 @@
       }
     }
 
-    // Login Juri
     function loginJuri(e) {
       e.preventDefault();
       const pass = document.getElementById('inputPassJuri').value;
-      
-      let foundKey = null;
-      Object.keys(dbData.juri).forEach(key => {
-        if (dbData.juri[key].pass === pass) foundKey = key;
-      });
+      let foundKey = Object.keys(dbData.juri).find(key => dbData.juri[key].pass === pass);
 
       if (foundKey) {
         currentRole = 'juri';
@@ -277,64 +265,28 @@
       }
     }
 
-    function logout() {
-      currentRole = null;
-      currentJuriKey = null;
-      showSection('sectionLogin');
-    }
+    function logout() { currentRole = null; currentJuriKey = null; showSection('sectionLogin'); }
 
-    // Fungsi Admin
-    function setNamaLomba(e) {
-      e.preventDefault();
-      const val = document.getElementById('inputNamaLomba').value;
-      db.ref('info/namaLomba').set(val);
-    }
-
+    function setNamaLomba(e) { e.preventDefault(); db.ref('info/namaLomba').set(document.getElementById('inputNamaLomba').value); }
     function addJuri(e) {
       e.preventDefault();
-      const nama = document.getElementById('juriName').value;
-      const pass = document.getElementById('juriPass').value;
-      db.ref('juri').push({ nama, pass });
-      document.getElementById('juriName').value = '';
-      document.getElementById('juriPass').value = '';
+      db.ref('juri').push({ nama: document.getElementById('juriName').value, pass: document.getElementById('juriPass').value });
+      document.getElementById('juriName').value = ''; document.getElementById('juriPass').value = '';
     }
-
-    function deleteJuri(key) {
-      if (confirm('Hapus Juri ini?')) {
-        db.ref(`juri/${key}`).remove();
-      }
-    }
-
+    function deleteJuri(key) { if (confirm('Hapus Juri ini?')) db.ref(`juri/${key}`).remove(); }
     function addPeserta(e) {
       e.preventDefault();
-      const no = document.getElementById('pesertaNo').value;
-      const nama = document.getElementById('pesertaNama').value;
-      const kategori = document.getElementById('pesertaKategori').value;
-      db.ref('peserta').push({ no, nama, kategori });
-      document.getElementById('pesertaNo').value = '';
-      document.getElementById('pesertaNama').value = '';
+      db.ref('peserta').push({ no: document.getElementById('pesertaNo').value, nama: document.getElementById('pesertaNama').value, kategori: document.getElementById('pesertaKategori').value });
+      document.getElementById('pesertaNo').value = ''; document.getElementById('pesertaNama').value = '';
     }
-
     function addKriteria(e) {
       e.preventDefault();
-      const nama = document.getElementById('kriteriaNama').value;
-      db.ref('kriteria').push({ nama });
+      db.ref('kriteria').push({ nama: document.getElementById('kriteriaNama').value });
       document.getElementById('kriteriaNama').value = '';
     }
+    function deleteKriteria(key) { if (confirm('Hapus Kriteria ini?')) db.ref(`kriteria/${key}`).remove(); }
+    function resetAllData() { if (confirm('Hapus SELURUH Data?')) db.ref().remove(); }
 
-    function deleteKriteria(key) {
-      if (confirm('Hapus Kriteria ini?')) {
-        db.ref(`kriteria/${key}`).remove();
-      }
-    }
-
-    function resetAllData() {
-      if (confirm('Apakah Anda YAKIN ingin MENGHAPUS SELURUH data inputan dari server online?')) {
-        db.ref().remove();
-      }
-    }
-
-    // Update Tampilan Admin
     function updateUI() {
       const title = dbData.info.namaLomba || 'Aplikasi Penilaian Lomba';
       document.getElementById('appHeaderTitle').innerText = title;
@@ -342,24 +294,20 @@
       document.getElementById('pdfTitle').innerText = `REKAPITULASI HASIL PENILAIAN ${title.toUpperCase()}`;
       document.getElementById('inputNamaLomba').value = dbData.info.namaLomba || '';
 
-      // Render List Juri
       const listJuri = document.getElementById('listJuri');
       listJuri.innerHTML = '';
       Object.keys(dbData.juri).forEach(key => {
-        const j = dbData.juri[key];
         listJuri.innerHTML += `<li class="py-2 flex justify-between items-center border-b">
-          <span><b>${j.nama}</b> (Pass: ${j.pass})</span>
+          <span><b>${dbData.juri[key].nama}</b> (Pass: ${dbData.juri[key].pass})</span>
           <button onclick="deleteJuri('${key}')" class="text-red-500 font-bold hover:underline">Hapus</button>
         </li>`;
       });
 
-      // Render List Kriteria
       const listKriteria = document.getElementById('listKriteria');
       listKriteria.innerHTML = '';
       Object.keys(dbData.kriteria).forEach(key => {
-        const k = dbData.kriteria[key];
         listKriteria.innerHTML += `<li class="py-2 flex justify-between items-center border-b">
-          <span>${k.nama}</span>
+          <span>${dbData.kriteria[key].nama}</span>
           <button onclick="deleteKriteria('${key}')" class="text-red-500 font-bold hover:underline">Hapus</button>
         </li>`;
       });
@@ -383,32 +331,25 @@
         }
       });
 
-      // Akumulasi Skor per Peserta
       listPeserta.forEach(p => {
         let grandTotal = 0;
         p.juriScores = {};
-
         juriKeys.forEach(jKey => {
           let totalScoreJuri = 0;
           p.juriScores[jKey] = { kriteria: {}, total: 0 };
-
           kriteriaKeys.forEach(kKey => {
             const val = dbData.penilaian[`${p.id}_${jKey}_${kKey}`] || 0;
             p.juriScores[jKey].kriteria[kKey] = val;
             totalScoreJuri += Number(val);
           });
-
           p.juriScores[jKey].total = totalScoreJuri;
           grandTotal += totalScoreJuri;
         });
-
         p.grandTotal = grandTotal;
       });
 
-      // Urutkan Nilai Terbanyak ke Terendah
       listPeserta.sort((a, b) => b.grandTotal - a.grandTotal);
 
-      // Header Tabel
       let headerHTML = `<thead><tr class="bg-slate-100 border-b border-slate-300">
         <th class="p-2 border border-slate-300 text-center">No. Peserta</th>
         <th class="p-2 border border-slate-300">Nama Peserta</th>`;
@@ -422,7 +363,6 @@
 
       headerHTML += `<th class="p-2 border border-slate-300 bg-indigo-100 text-center">Total Akumulasi</th></tr></thead>`;
 
-      // Body Tabel
       let bodyHTML = '<tbody>';
       if (listPeserta.length === 0) {
         bodyHTML += `<tr><td colspan="100" class="p-4 text-center text-slate-400">Belum ada peserta di kategori ini</td></tr>`;
@@ -444,11 +384,9 @@
         });
       }
       bodyHTML += '</tbody>';
-
       table.innerHTML = headerHTML + bodyHTML;
     }
 
-    // Logika Dashboard Juri
     function renderJuriOptions() {
       const select = document.getElementById('selectPesertaJuri');
       const curVal = select.value;
@@ -468,10 +406,7 @@
       const form = document.getElementById('formPenilaianJuri');
       const fields = document.getElementById('dynamicKriteriaFields');
 
-      if (!pId) {
-        form.classList.add('hidden');
-        return;
-      }
+      if (!pId) { form.classList.add('hidden'); return; }
 
       const p = dbData.peserta[pId];
       document.getElementById('evalPesertaInfo').innerText = `Menilai: [${p.kategori}] No. ${p.no} - ${p.nama}`;
@@ -502,7 +437,7 @@
       document.querySelectorAll('.inputScore').forEach(input => {
         let val = parseInt(input.value) || 0;
         if (val > 100) input.value = 100;
-        total += parseInt(input.value) || 0;
+        total += val;
       });
       document.getElementById('labelTotalNilai').innerText = total;
     }
@@ -519,7 +454,7 @@
       });
 
       if (!valid) {
-        alert("Setiap kriteria harus bernilai antara 50 sampai 100!");
+        alert("Nilai harus berada di rentang 50 s/d 100!");
         return;
       }
 
@@ -529,10 +464,9 @@
         db.ref(`penilaian/${pId}_${currentJuriKey}_${kKey}`).set(val);
       });
 
-      alert("Nilai berhasil disimpan & terkirim ke server!");
+      alert("Nilai berhasil disimpan!");
     }
 
-    // Fungsi Export PDF
     function downloadPDF() {
       const element = document.getElementById('pdfArea');
       const filename = (dbData.info.namaLomba || 'Rekap_Hasil_Penilaian').replace(/\s+/g, '_') + '.pdf';
